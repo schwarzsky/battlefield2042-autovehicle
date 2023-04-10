@@ -2,6 +2,11 @@
 
 A simple macro for all vehicles in Battlefield 2042.
 
+ALT+K to enable.
+ALT+L to disable.
+
+Make sure you are on deploy screen otherwise you will not get any feedback.
+
 ## ‼️ Warning
 Not all game-modes supported yet, also might be crashing bugs still not tested completely yet. Anyway all support is appreciated. 
 
