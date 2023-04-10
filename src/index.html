@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BF2042 AutoVehicle</title>
+  <style>
+    @import url("https://rsms.me/inter/inter.css");
+
+    body {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+      background-color: black;
+    }
+
+    .titlebar {
+      width: 100%;
+      height: 24px;
+      background: #72fda4;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-app-region: drag;
+    }
+
+    .teamSelect, .mapSelect, #vehicleOptions {
+      outline: none;
+      border: 1px solid gray;
+      padding-left: 4px;
+      padding-right: 4px;
+      padding-top: 2px;
+      padding-bottom: 2px;
+      color: white;
+      background: transparent;
+    }
+
+    .teamSelect option, .mapSelect option, #vehicleOptions option {
+      color: black;
+    }
+
+    .content {
+      margin-top: 12px;
+      margin-left: 12px;
+      flex: 1;
+      width: 100%;
+      height: 100%;
+    }
+
+    #vehicles {
+      color: white;
+    }
+
+    .selected {
+      border: 1px solid #25fede;
+    }
+
+    #vehicles * {
+      margin: 5px;
+    }
+
+    .container {
+      width: 100%;
+      max-height: 100vh;
+      display: flex;
+    }
+
+    .content {
+      flex: 1;
+      display: flex;
+      width: 100%;
+      gap: 5px;
+    }
+
+    .log {
+      flex: 1;
+      background:#25fede;
+    }
+  </style>
+</head>
+<body>
+  <div class="titlebar">
+    BF2042 AutoVehicle
+  </div>
+  <div class="container">
+    <div class="content" id="content">
+      <select class="teamSelect" id="ab">
+        <option value="US">US</option>
+        <option value="RU">RU</option>
+      </select>
+      <select id="vehicleOptions"></select>
+    </div>
+  </div>
+  <script type="text/javascript">
+    const teamSelect = document.getElementById("ab");
+    const teamSpecificVehicles = {
+      US: [
+        {
+          name: "AH64GX Apache Warchief",
+          position: [1474, 770],
+          image: "US/ah64gxapachewarchief.png",
+        },
+        {
+          name: "F35E Panther",
+          position: [1750, 766],
+          image: "US/f35epanther.png",
+        },
+        {
+          name: "MV38 Condor",
+          position: [1232, 768],
+          image: "US/mv38condor.png",
+        },
+        {
+          name: "RAH68 Huron",
+          position: [1502, 906],
+          image: "US/rah68huron.png",
+        },
+        {
+          name: "M1A5",
+          position: [958, 769],
+          image: "US/m1a5.png",
+        },
+      ],
+      RU: [
+        {
+          name: "KA520 Super Hokum",
+          position: [],
+          image: "RU/ka520superhokum.png",
+        },
+        {
+          name: "MI240 Super Hind",
+          position: [],
+          image: "RU/mi240superhind.png",
+        },
+        {
+          name: "SU57 Felon",
+          position: [],
+          image: "RU/su57felon.png",
+        },
+        {
+          name: "YG99 Hannibal",
+          position: [],
+          image: "RU/yg99hannibal.png",
+        },
+        {
+          name: "T28",
+          position: [],
+          image: "RU/t28.png",
+        },
+      ],
+    };
+
+    const standartVehicles = [
+      {
+        name: "CAV Brawler",
+        position: [424, 908],
+      },
+      {
+        name: "EBAA Wildcat",
+        position: [962, 776],
+      },
+      {
+        name: "EBLC Ram",
+        position: [969, 827],
+      },
+      {
+        name: "EMKV90-Tor",
+        position: [944, 840],
+      },
+      {
+        name: "LATV4 Recon",
+        position: [172, 765],
+      },
+      {
+        name: "LCAA Hovercraft",
+        position: [167, 829],
+      },
+      {
+        name: "M5C Bolte",
+        position: [428, 906],
+      },
+      {
+        name: "MAV",
+        position: [414, 772],
+      },
+      {
+        name: "MD540 Nightbird",
+        position: [1491, 832],
+      },
+    ];
+
+
+    const vehicleOptions = document.getElementById("vehicleOptions")
+
+    teamSpecificVehicles.US.forEach(v => {
+      const option = document.createElement("option")
+      option.setAttribute("value", `${v.name}`)
+      option.innerText = v.name;
+
+      vehicleOptions.appendChild(option)
+    })
+
+    standartVehicles.forEach(v => {
+      const option = document.createElement("option")
+      option.setAttribute("value", `${v.name}`)
+      option.innerText = v.name;
+
+      vehicleOptions.appendChild(option)
+    })
+
+    const {ipcRenderer} = require('electron')
+
+    const allVehicles = [
+        ...teamSpecificVehicles.US,
+        ...teamSpecificVehicles.RU,
+        ...standartVehicles
+      ]
+
+    vehicleOptions.addEventListener('change', (e) => {
+      const val = e.target.value
+      
+
+      const selected = allVehicles.filter(v => {
+        if(v.name == val){
+          return v
+        }
+      })
+
+      ipcRenderer.send('vehicleChange', selected[0])
+    })
+
+    teamSelect.addEventListener('change', (e) => {
+      const val = e.target.value
+
+      const childrens = vehicleOptions.children;
+
+      Array.from(childrens).forEach(v => {
+        vehicleOptions.removeChild(v)
+      })
+
+      teamSpecificVehicles[val].forEach(v => {
+        const option = document.createElement("option")
+        option.setAttribute("value", `${v.name}`)
+        option.innerText = v.name;
+
+        vehicleOptions.appendChild(option)
+      })
+
+      standartVehicles.forEach(v => {
+        const option = document.createElement("option")
+        option.setAttribute("value", `${v.name}`)
+        option.innerText = v.name;
+
+        vehicleOptions.appendChild(option)
+      })
+    })
+  </script>
+</body>
+</html>

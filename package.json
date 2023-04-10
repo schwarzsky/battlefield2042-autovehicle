@@ -1,0 +1,68 @@
+{
+  "name": "battlefield-2042-autovehicle",
+  "version": "1.0.0",
+  "description": "A autovehicle macro for Battlefield 2042.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "devDependencies": {
+    "electron": "10.1.2",
+    "electron-builder": "^22.10.5"
+  },
+  "dependencies": {
+    "@nut-tree/nut-js": "^3.1.1",
+    "electron-is-dev": "^2.0.0",
+    "electron-log": "^4.4.8",
+    "electron-updater": "^5.3.0",
+    "fs": "0.0.1-security",
+    "iohook": "^0.9.0",
+    "set-interval-async": "^3.0.3"
+  },
+  "keywords": [],
+  "author": "schwarzsky",
+  "license": "ISC",
+  "engines": {
+    "node": ">=10.13.0"
+  },
+  "iohook": {
+    "targets": [
+      "electron-82"
+    ],
+    "platforms": [
+      "win32",
+      "darwin",
+      "linux"
+    ],
+    "arches": [
+      "x64",
+      "ia32"
+    ]
+  },
+  "build": {
+    "productName": "Battlefield 2042 AutoVehicle",
+    "copyright": "Copyright © 2023 schwarzsky",
+    "appId": "bf2042autovehicle.schwarzsky",
+    "squirrelWindows": {
+      "msi": true
+    },
+    "msi": {
+      "oneClick": true
+    },
+    "win": {
+      "target": "msi"
+    },
+    "extraResources": [
+      {
+        "from": "lib",
+        "to": "lib",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ]
+  }
+}
