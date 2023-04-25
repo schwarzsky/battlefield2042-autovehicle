@@ -1,28 +1,29 @@
 # Battlefield 2042 AutoVehicle
 
-A simple macro for all vehicles in Battlefield 2042.
+## About
+Battlefield 2042 vehicle macro with shortcuts easily.
 
-ALT+K to enable.
-ALT+L to disable.
+Current Shortcuts:
+- ALT+K to enable (macro will work if you choose vehicle)
+- ALT+ to disable
 
-Make sure you are on deploy screen otherwise you will not get any feedback.
+This program can handle auto and *only* vehicke macros. Do not use macros for aiming/controlling your weapon.
 
-## ‼️ Warning
-Not all game-modes supported yet, also might be crashing bugs still not tested completely yet. Anyway all support is appreciated. 
+For bugs, ideas: Feel free to post an [Issue](https://github.com/schwarzsky/battlefield2042-autovehicle/issues) or [PR](https://github.com/schwarzsky/battlefield2042-autovehicle/pulls).
 
-Macro is not fast enough yet.
+**Current plans to work:**
+- [ ] Add an image input for custom UI Colors
+- [ ] Add custom keys for macros
+- [ ] Lowerize the working time of process
+- [ ] More ways to handle macro as perfects as possible
 
-
-**Only windows is supported currently, also you need to install Python & `pip install python-imagesearch` in your system.**
-
-## Issues
-Issues are pretty straightforward, create an Issue from "Issues" with a logic explanation.
-
-## Contribution
-
-As i said, project is always open for contribution. I need your help!
-
-`npm install`
-`npm run start`
-
-You need to use Node version `10.13.0` in order `iohook` to work.
+## Development
+- Make sure your system supports as `iohook` [platforms](https://github.com/wilix-team/iohook#platform-support).
+- `node-gpy` should be installed properly as [mentioned here.](https://github.com/nodejs/node-gyp#on-windows)
+- `npm install` preferred, or `yarn`.
+- NodeJS version must be same as mentioned in `package.json`
+```js
+"engines": {
+    "node": ">=10.13.0"
+},
+```

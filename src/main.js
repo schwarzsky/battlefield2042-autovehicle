@@ -1,17 +1,18 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
 const ioHook = require('iohook')
 const spawn = require('child_process').spawn
-const {mouse, Button, Point, screen} = require('@nut-tree/nut-js')
-const setIntervalAsync = require('set-interval-async').setIntervalAsync;
+const {mouse, Button, Point, sleep} = require('@nut-tree/nut-js')
+const setIntervalAsync = require('set-interval-async').setIntervalAsync
 const isDev = require('electron-is-dev')
 const log = require('electron-log')
 const path = require('path')
+const {autoUpdater} = require('electron-updater')
+
+autoUpdater.logger = log
+autoUpdater.logger.transports.file.level = 'info'
+log.info('App starting')
 
 log.transports.file.level = "info";
-
-ioHook.on('mouseclick', (e) => {
-  //console.log(e)
-})
 
 ioHook.start(false)
 
@@ -28,7 +29,7 @@ ioHook.registerShortcut(
   [56, 37], // ALT-K
   (keys) => {
     if (IS_MACRO_ACTIVE) return;
-    log.info("Started macro");
+    log.info("Started macro")
 
     IS_MACRO_ACTIVE = true;
   }
@@ -38,7 +39,7 @@ ioHook.registerShortcut(
   [56, 38], // ALT-L
   (keys) => {
     if (!IS_MACRO_ACTIVE) return;
-    log.info("Stopped macro");
+    log.info("Stopped macro")
 
     IS_MACRO_ACTIVE = false;
   }
@@ -69,58 +70,102 @@ const createWindow = () => {
   win.loadFile('src/index.html')
 }
 
-const macroInterval  = async () => {
+let TIME_INTERVAL_STARTED = 0;
+
+const macroInterval  = () => {
   if(!IS_MACRO_ACTIVE) return;
   if(!VEHICLE_POS) return;
 
   log.info('Started loop')
+  TIME_INTERVAL_STARTED = 0;
+
+  const intervalTimer = setInterval(() => {
+    TIME_INTERVAL_STARTED += 1;
+  }, 1)
 
   let pythonProcess;
 
   if(isDev){
-    pythonProcess = spawn('python', ['./lib/image_search.py']);
+    pythonProcess = spawn('python', ['./lib/image_search.py'])
     log.info('useDev')
   } else {
     log.info(path.join(process.resourcesPath, "lib", "image_search.py"))
-    pythonProcess = spawn('python', [path.join(process.resourcesPath, "lib", "image_search.py"), ]);
+    pythonProcess = spawn('python', [path.join(process.resourcesPath, "lib", "image_search.py"), ])
   }
 
-  pythonProcess.stdout.on("data", async function (data) {
-    log.info(data.toString())
+  pythonProcess.stdout.on("data", async(data) => {
+    log.info(`PYTHON: Vehicle icon data: ${data.toString()}`)
 
     try {
       const pos = JSON.parse(`[${data.toString()}]`)
       await mouse.setPosition(new Point(pos[0], pos[1]))
       await mouse.click(Button.LEFT)
       log.info("Clicked vehicle icon")
-      
-      setTimeout(async () => {
-        const pixelAt = await screen.colorAt(new Point(472, 528))
-        await mouse.setPosition(new Point(VEHICLE_POS[0], VEHICLE_POS[1]))
-        await mouse.click(Button.LEFT)
-        log.info(`Clicked vehicle pos${JSON.stringify(VEHICLE_POS)}`)
-      }, 300)
 
-      setTimeout(async () => {
-        await mouse.setPosition(new Point(856, 163))
-        await mouse.click(Button.LEFT)
-      }, 800)
+      await sleep(300)
+      await mouse.setPosition(new Point(VEHICLE_POS[0], VEHICLE_POS[1]))
+      await mouse.click(Button.LEFT)
+      log.info(`Clicked vehicle pos${JSON.stringify(VEHICLE_POS)}`)
+
+      // Click on empty area to close vehicle UI
+      await mouse.setPosition(new Point(856, 163))
+      await mouse.click(Button.LEFT)
+      log.info('Interval time: ', TIME_INTERVAL_STARTED)
+      clearInterval(intervalTimer)
     } catch(e) {
       log.error(e)
     }
   });
 
   pythonProcess.stderr.on("data", (data) => {
-    log.error(`-PYTHON stderr: ${data}`);
+    log.error(`PYTHON: stderr: ${data}`)
   });
 
   pythonProcess.on("close", (code) => {
-    log.warn(`-PYTHON child process exited with code ${code}`);
+    log.warn(`PYTHON: Child process exited with code ${code}`)
   });
 }
 
 setIntervalAsync(macroInterval, 1000)
 
+let splashWindow;
+
+function sendStatusToWindow(text) {
+  log.info(text);
+  if(splashWindow){
+    splashWindow.webContents.send('message', text);
+  }
+}
+
+app.on('window-all-closed', () => {
+  app.quit()
+})
+
 app.whenReady().then(() => {
   createWindow()
+  // logger is still not working properly
 })
+
+autoUpdater.on('update-not-available', () => {
+  splashWindow.close()
+  createWindow()
+})
+
+autoUpdater.on('checking-for-update', () => {
+  sendStatusToWindow('Checking for update')
+})
+
+autoUpdater.on('update-available', () => {
+  sendStatusToWindow('Update available')
+})
+
+autoUpdater.on('download-progress', (progressObj) => {
+  let log_message = "Download speed: " + progressObj.bytesPerSecond;
+  log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
+  log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
+  sendStatusToWindow(log_message);
+})
+
+autoUpdater.on('update-downloaded', (info) => {
+  sendStatusToWindow('Update downloaded');
+});
